@@ -1,59 +1,10 @@
-"use client";
-
-import React from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-
-const UNLOCK_KEY = "negocalc_unlocked_v1";
+import { Suspense } from "react";
+import SuccessClient from "./success-client";
 
 export default function SuccessPage() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const [status, setStatus] = React.useState<"checking" | "ok" | "fail">(
-    "checking"
-  );
-
-  React.useEffect(() => {
-    const sessionId = params.get("session_id");
-    if (!sessionId) {
-      setStatus("fail");
-      return;
-    }
-
-    (async () => {
-      try {
-        const res = await fetch("/api/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId })
-        });
-        const data = (await res.json()) as { paid?: boolean };
-        if (data.paid) {
-          try {
-            localStorage.setItem(UNLOCK_KEY, "true");
-          } catch {}
-          setStatus("ok");
-          // Go back to homepage unlocked
-          setTimeout(() => router.replace("/"), 400);
-        } else {
-          setStatus("fail");
-        }
-      } catch {
-        setStatus("fail");
-      }
-    })();
-  }, [params, router]);
-
   return (
-    <main style={{ padding: 28, maxWidth: 720, margin: "0 auto" }}>
-      <h1 style={{ margin: "0 0 10px" }}>Payment status</h1>
-      {status === "checking" && <p>Verifying your payment…</p>}
-      {status === "ok" && <p>Unlocked. Redirecting…</p>}
-      {status === "fail" && (
-        <>
-          <p>Could not verify payment. Please return and try again.</p>
-          <a href="/" style={{ color: "white" }}>Back</a>
-        </>
-      )}
-    </main>
+    <Suspense fallback={null}>
+      <SuccessClient />
+    </Suspense>
   );
 }
