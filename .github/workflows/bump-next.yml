@@ -1,0 +1,33 @@
+name: Bump Next.js
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Upgrade Next.js + regenerate lockfile
+        run: |
+          npm i next@latest
+          rm -rf node_modules package-lock.json .next
+          npm install
+          npm ls next
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "fix: upgrade next (security)" || echo "No changes to commit"
+          git push
